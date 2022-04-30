@@ -1,22 +1,51 @@
 import { useEffect, useState } from "react";
 import { connectWallet, getCurrentWalletConnected, mint } from "./utils/interact.js";
+const Minter = (props,accounts) => {
 
-const Minter = (props) => {
 
   //State variables
   const [walletAddress, setWallet] = useState("");
   const [status, setStatus] = useState("");
+  const isConnected = Boolean(walletAddress.length>0);
+  const [buttonState,setButtonState] = useState(Boolean);
+
+
+  const networkChanged = chainId => {
+    if(chainId== '0x4'){
+      setButtonState(false);
+      setStatus("👆🏽 Press here if you want a caveman");
+    }
+    else{
+      setButtonState(true);
+      setStatus('Wrong Network');
+    }
+  };
+
   function addWalletListener() {
     if (window.ethereum) {
+      window.ethereum.on("chainChanged", networkChanged);
       window.ethereum.on("accountsChanged", (accounts) => {
         if (accounts.length > 0) {
           setWallet(accounts[0]);
-          setStatus("👆🏽 Press here if you want a caveman");
+
         } else {
           setWallet("");
           setStatus("🦊 Connect to Metamask using the top right button.");
         }
       });
+
+      if(window.ethereum.networkVersion == '4'){
+        setButtonState(false);
+        setStatus("👆🏽 Press here if you want a caveman");
+      }
+
+      else
+      {
+        setButtonState(true);
+        setStatus('Wrong Network');
+      }
+
+
     } else {
       setStatus(
         <p>
@@ -30,11 +59,12 @@ const Minter = (props) => {
       );
     }
   }
- 
+
   useEffect(async () => {
     const {address, status} = await getCurrentWalletConnected();
     setWallet(address)
     setStatus(status); 
+    setButtonState(buttonState);
     addWalletListener();
 }, []);
 
@@ -48,6 +78,7 @@ const Minter = (props) => {
     const { status } = await mint(1);
     setStatus(status);
 };
+
 
   return (
     <div className="Minter">
@@ -67,9 +98,14 @@ const Minter = (props) => {
       <p>
         Me Swypes, Me big Belly, Me want Beer, Mint here
       </p>
-      <button id="mintButton" onClick={onMintPressed}>
+      {isConnected ? (
+      <button hidden={buttonState} id="mintButton" onClick={onMintPressed} >
         Mint NFT
       </button>
+      
+      ) : (
+        <p>Please connect Metamask</p>
+      ) }
       <p id="status">
         {status}
       </p>
@@ -78,3 +114,4 @@ const Minter = (props) => {
 };
 
 export default Minter;
+

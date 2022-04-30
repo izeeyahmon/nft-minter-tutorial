@@ -4,13 +4,21 @@ const { createAlchemyWeb3 } = require("@alch/alchemy-web3");
 const web3 = createAlchemyWeb3(alchemyKey);
 const contractABI = require('../contract-abi.json')
 const contractAddress = "0xd5f82cD39a6252d66F8975Df7A4993687a5b1a87";
-const siglist = require("./signatures.json");
+const siglist = require("../signatures.json");
+
+
 
 export const mint = async (mintAmount) => {
     window.contract = await new web3.eth.Contract(contractABI.abi, contractAddress);
     const account = web3.utils.toChecksumAddress(window.ethereum.selectedAddress);
     const signature = siglist[account];
-    console.log(account + signature);
+    
+    if (!signature){
+      return {
+        success:false,
+        status :"You are not part of the cave Get Outta here"
+      }
+    }
     //set up your Ethereum transaction
     const transactionParameters = {
     to: contractAddress, // Required except during contract publications.
@@ -85,6 +93,7 @@ export const connectWallet = async () => {
           return {
             address: addressArray[0],
             status: "👆🏽  Press here if you want a caveman",
+            network : window.ethereum.networkVersion, 
           };
         } else {
           return {
